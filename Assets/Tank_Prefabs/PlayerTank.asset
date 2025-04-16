@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db78cc73d141f36409a50c27f554e13e, type: 3}
+  m_Name: PlayerTank
+  m_EditorClassIdentifier: 
+  tank_name: Basic
+  tankType: 3
+  firing_strategy: 0
+  movement_strategy: 0
+  projectileData: {fileID: 11400000, guid: a559b0cc53955af44a6810d7c417f241, type: 2}
+  health: 150
+  armor: 10
+  armor_defense: 5
+  speed: 10
+  fire_rate: 1
+  tank_prefab: {fileID: 2319399737314389665, guid: 47353fb8471069a48bb18dc5c0bfa9e5, type: 3}
+  projectile_prefab: {fileID: 8974753414345542628, guid: 305a6ea6ddaa9d541a7786a6ac91f8d9, type: 3}
+  nav_acceleration: 0
+  nav_angularSpeed: 0
+  nav_stoppingDistance: 0
