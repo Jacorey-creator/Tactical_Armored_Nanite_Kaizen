@@ -28,24 +28,46 @@ public class Projectile : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log("Projectile collided with: " + collision.gameObject.name);
         if (explodes)
-        {
-            Collider[] hits = Physics.OverlapSphere(transform.position, radius);
-            foreach (var hit in hits)
-            {
-                float distance = Vector3.Distance(transform.position, hit.transform.position);
-                float damageMultiplier = 1 - Mathf.Clamp01(distance / radius) * falloff;
-
-                // Apply damage based on your damage system
-                // Example: hit.GetComponent<Health>()?.TakeDamage(damage * damageMultiplier);
-            }
-        }
+ Explode();
         else
         {
-            //Apply direct damage
-            //Example: collision.collider.GetComponent<Health>()?.TakeDamage(damage);
+            if (collision.collider.TryGetComponent(out TankController tank))
+            {
+                TankHealthLogic.TakeDamage(
+                    tank.TankData,
+                    tank,
+                    damage,
+                    ref tank.currentShield,
+                    ref tank.currentHealth);
+            }
         }
-
         Destroy(gameObject);
+    }
+
+    private void Explode()
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+        Debug.Log("Exploded! Found " + hits.Length + " colliders.");
+
+        foreach (var hit in hits)
+        {
+            Debug.Log("Overlap hit: " + hit.name);
+            if (hit.TryGetComponent(out TankController tank))
+            {
+                Debug.Log("Tank Controller hit!");
+                float distance = Vector3.Distance(transform.position, hit.transform.position);
+                float damageMultiplier = 1 - Mathf.Clamp01(distance / radius) * falloff;
+                float finalDamage = damage * damageMultiplier;
+
+                TankHealthLogic.TakeDamage(
+                    tank.TankData,
+                    tank,
+                    finalDamage,
+                    ref tank.currentShield,
+                    ref tank.currentHealth);
+            }
+        }
     }
 }

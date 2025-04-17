@@ -39,7 +39,7 @@ public class GameManager : MonoBehaviour
         //Update all AI Target
         foreach (var ai in FindObjectsByType<TankController>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
         {
-            if (ai.tankData.movement_strategy == TankControllers.AI)
+            if (ai.TankData.movement_strategy == TankControllers.AI)
             {
                 ai.SetAITarget(tankObj.transform);
             }

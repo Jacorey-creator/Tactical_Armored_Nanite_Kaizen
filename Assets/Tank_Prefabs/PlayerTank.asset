@@ -17,7 +17,7 @@ MonoBehaviour:
   firing_strategy: 0
   movement_strategy: 0
   projectileData: {fileID: 11400000, guid: a559b0cc53955af44a6810d7c417f241, type: 2}
-  health: 150
+  health: 10
   armor: 10
   armor_defense: 5
   speed: 10
@@ -27,3 +27,4 @@ MonoBehaviour:
   nav_acceleration: 0
   nav_angularSpeed: 0
   nav_stoppingDistance: 0
+  firing_distance: 0

@@ -16,7 +16,7 @@ public class SingleShotStrategy : IFiringStrategy
     public void Fire(TankController tank)
     {
         // Validate required data
-        if (tank.tankData.projectile_prefab == null)
+        if (tank.TankData.projectile_prefab == null)
         {
             Debug.LogWarning("No projectile assigned in TankData!");
             return;
@@ -34,7 +34,7 @@ public class SingleShotStrategy : IFiringStrategy
 
         // Instantiate the projectile
         GameObject projectile = GameObject.Instantiate(
-            tank.tankData.projectile_prefab,
+            tank.TankData.projectile_prefab,
             firePoint.position,
             firePoint.rotation
         );
@@ -44,7 +44,7 @@ public class SingleShotStrategy : IFiringStrategy
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;  // Reset velocity
-            rb.AddForce(fireDirection * tank.tankData.projectileData.velocity, ForceMode.VelocityChange);
+            rb.AddForce(fireDirection * tank.TankData.projectileData.velocity, ForceMode.VelocityChange);
         }
         else
         {
@@ -55,7 +55,7 @@ public class SingleShotStrategy : IFiringStrategy
         Projectile projectileScript = projectile.GetComponent<Projectile>();
         if (projectileScript != null)
         {
-            projectileScript.Initialize(tank.tankData.projectileData);
+            projectileScript.Initialize(tank.TankData.projectileData);
         }
         else
         {
@@ -70,13 +70,13 @@ public class SpreadShotStrategy : IFiringStrategy
     {
         // Retrieve the firing point and validate required data
         Transform firePoint = tank.GetFiringPoint();
-        if (tank.tankData.projectile_prefab == null || tank.tankData.projectileData == null || firePoint == null)
+        if (tank.TankData.projectile_prefab == null || tank.TankData.projectileData == null || firePoint == null)
         {
             Debug.LogWarning("Missing projectile prefab, projectile data, or fire point on tank!");
             return;
         }
 
-        ProjectileData data = tank.tankData.projectileData;
+        ProjectileData data = tank.TankData.projectileData;
         float spreadAngle = 15f;
 
         // Fire three projectiles in a spread: left, center, right
@@ -84,7 +84,7 @@ public class SpreadShotStrategy : IFiringStrategy
         {
             Quaternion spreadRotation = firePoint.rotation * Quaternion.Euler(0, i * spreadAngle, 0);
             GameObject projectileGO = GameObject.Instantiate(
-                tank.tankData.projectile_prefab,
+                tank.TankData.projectile_prefab,
                 firePoint.position,
                 spreadRotation
             );

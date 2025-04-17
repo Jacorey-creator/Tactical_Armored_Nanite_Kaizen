@@ -33,6 +33,6 @@ public class PlayerMovementStrategy : ITankMovementStrategy
         // Move the tank forward or backward along its current forward
         Vector3 moveDir = tank.transform.forward * vertical;
 
-        tank.transform.position += moveDir * tank.tankData.speed * Time.deltaTime;
+        tank.transform.position += moveDir * tank.TankData.speed * Time.deltaTime;
     }
 }

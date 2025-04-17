@@ -6,9 +6,9 @@ public class PlayerFiringHandler : IHandleFiring
 
     public void HandleFiring(TankController tank)
     {
-        if (Input.GetButton("Fire1") && Time.time >= lastFireTime + tank.tankData.fire_rate)
+        if (Input.GetButton("Fire1") && Time.time >= lastFireTime + tank.TankData.fire_rate)
         {
-            tank.SetFiringStrategy(FiringStrategyFactory.GetStrategy(tank.tankData.firing_strategy));
+            tank.SetFiringStrategy(FiringStrategyFactory.GetStrategy(tank.TankData.firing_strategy));
             tank.GetFiringStrategy()?.Fire(tank);
             lastFireTime = Time.time;
         }

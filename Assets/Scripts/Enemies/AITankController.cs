@@ -18,10 +18,10 @@ public class AITankController : MonoBehaviour
         try
         {
             // Set basic stats from data
-            agent.speed = tankController.tankData.speed;
-            agent.acceleration = tankController.tankData.nav_acceleration;
-            agent.angularSpeed = tankController.tankData.nav_angularSpeed;
-            agent.stoppingDistance = tankController.tankData.nav_stoppingDistance;
+            agent.speed = tankController.TankData.speed;
+            agent.acceleration = tankController.TankData.nav_acceleration;
+            agent.angularSpeed = tankController.TankData.nav_angularSpeed;
+            agent.stoppingDistance = tankController.TankData.nav_stoppingDistance;
         }
         catch (System.Exception ex)
         {

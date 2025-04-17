@@ -9,9 +9,9 @@ public class AIFiringHandler : IHandleFiring
         if (tank.GetAITarget() == null) return;
 
         float distanceToTarget = Vector3.Distance(tank.transform.position, tank.GetAITarget().position);
-        if (distanceToTarget < tank.tankData.firing_distance && Time.time >= lastFireTime + tank.tankData.fire_rate)
+        if (distanceToTarget < tank.TankData.firing_distance && Time.time >= lastFireTime + tank.TankData.fire_rate)
         {
-            tank.SetFiringStrategy(FiringStrategyFactory.GetStrategy(tank.tankData.firing_strategy));
+            tank.SetFiringStrategy(FiringStrategyFactory.GetStrategy(tank.TankData.firing_strategy));
             tank.GetFiringStrategy()?.Fire(tank);
             lastFireTime = Time.time;
         }
