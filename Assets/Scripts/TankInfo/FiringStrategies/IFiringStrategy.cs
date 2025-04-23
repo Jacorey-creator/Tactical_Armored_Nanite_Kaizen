@@ -22,7 +22,7 @@ public class SingleShotStrategy : IFiringStrategy
             return;
         }
 
-        Transform firePoint = tank.GetFiringPoint();
+        Transform firePoint = tank.FirePoint;
         if (firePoint == null)
         {
             Debug.LogWarning("No firing point found on the tank!");
@@ -69,7 +69,7 @@ public class SpreadShotStrategy : IFiringStrategy
     public void Fire(TankController tank)
     {
         // Retrieve the firing point and validate required data
-        Transform firePoint = tank.GetFiringPoint();
+        Transform firePoint = tank.FirePoint;
         if (tank.TankData.projectile_prefab == null || tank.TankData.projectileData == null || firePoint == null)
         {
             Debug.LogWarning("Missing projectile prefab, projectile data, or fire point on tank!");

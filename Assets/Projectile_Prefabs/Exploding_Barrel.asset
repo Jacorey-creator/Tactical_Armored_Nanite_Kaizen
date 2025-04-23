@@ -16,5 +16,5 @@ MonoBehaviour:
   damage: 10
   lifetime: 0.5
   explodes: 1
-  explosionRadius: 100
+  explosionRadius: 15
   damageFalloff: 0.5

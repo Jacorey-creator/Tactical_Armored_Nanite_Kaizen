@@ -17,12 +17,12 @@ MonoBehaviour:
   firing_strategy: 0
   movement_strategy: 1
   projectileData: {fileID: 11400000, guid: c914d8bd0adffdc40bf46c81dd4e8ac5, type: 2}
-  health: 1
-  armor: 1
-  armor_defense: 1
+  health: 50
+  armor: 10
+  armor_defense: 5
   speed: 2
   fire_rate: 3
-  tank_prefab: {fileID: 4730579829431122010, guid: 7d47e82e5efbcb349b761d69af7e4ff3, type: 3}
+  tank_prefab: {fileID: 4730579829431122010, guid: 1a88ea6b8e1c0e44da465bd73e7be62b, type: 3}
   projectile_prefab: {fileID: 8367015905649976852, guid: c0e534e6df8c9b14aa66a875cd258ec0, type: 3}
   nav_acceleration: 15
   nav_angularSpeed: 90

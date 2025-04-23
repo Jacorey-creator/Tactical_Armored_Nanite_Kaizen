@@ -36,14 +36,6 @@ public class GameManager : MonoBehaviour
     public void SpawnPlayer()
     {
         GameObject tankObj = Instantiate(tankPrefab, spawnPoint.position, spawnPoint.rotation);
-        //Update all AI Target
-        foreach (var ai in FindObjectsByType<TankController>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
-        {
-            if (ai.TankData.movement_strategy == TankControllers.AI)
-            {
-                ai.SetAITarget(tankObj.transform);
-            }
-        }
         RegisterPlayer(1);
     }
     void RegisterPlayer(int playerID)

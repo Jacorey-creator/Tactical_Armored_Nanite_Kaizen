@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db78cc73d141f36409a50c27f554e13e, type: 3}
-  m_Name: PlayerTank
+  m_Name: Box_Tank
   m_EditorClassIdentifier: 
-  tank_name: Basic
+  tank_name: Box_Tank
   tankType: 3
   firing_strategy: 0
   movement_strategy: 0
-  projectileData: {fileID: 11400000, guid: a559b0cc53955af44a6810d7c417f241, type: 2}
-  health: 10
+  projectileData: {fileID: 11400000, guid: c914d8bd0adffdc40bf46c81dd4e8ac5, type: 2}
+  health: 50
   armor: 10
   armor_defense: 5
-  speed: 10
-  fire_rate: 1
-  tank_prefab: {fileID: 8263803391513157083, guid: 2ee69e0fcb45af7449dd38843f815c78, type: 3}
-  projectile_prefab: {fileID: 8974753414345542628, guid: 305a6ea6ddaa9d541a7786a6ac91f8d9, type: 3}
-  nav_acceleration: 0
-  nav_angularSpeed: 0
-  nav_stoppingDistance: 0
-  firing_distance: 0
+  speed: 25
+  fire_rate: 0.2
+  tank_prefab: {fileID: 4730579829431122010, guid: 1a88ea6b8e1c0e44da465bd73e7be62b, type: 3}
+  projectile_prefab: {fileID: 8367015905649976852, guid: c0e534e6df8c9b14aa66a875cd258ec0, type: 3}
+  nav_acceleration: 15
+  nav_angularSpeed: 90
+  nav_stoppingDistance: 3
+  firing_distance: 5

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class TankController : MonoBehaviour
 {
@@ -17,10 +16,10 @@ public class TankController : MonoBehaviour
     [SerializeField] private Transform cameraPivot;     // Set via Inspector if player
     [SerializeField] private Transform aiTarget;
     [SerializeField] private Transform firePoint;
-    public Transform FirePoint => firePoint;
     public Transform GetAITarget() => aiTarget;
     public IFiringStrategy GetFiringStrategy() => firingStrategy;
     public TankData TankData => tankData;
+    public Transform FirePoint => firePoint;
 
     private void Awake()
     {
@@ -38,6 +37,7 @@ public class TankController : MonoBehaviour
         );
 
         firingHandler = HandleFiringFactory.GetHandler(tankData.movement_strategy);
+        SetTankVisual(tankData.tank_prefab);
     }
 
     private void Update()
@@ -53,20 +53,62 @@ public class TankController : MonoBehaviour
     {
         firingStrategy = strategy;
     }
-    public Transform GetFiringPoint() 
+    public void SetTankData(TankData newData)
     {
-        return FirePoint;
-    }
+        tankData = newData;
+        currentHealth = tankData.health;
+        currentShield = tankData.armor;
 
+        firingStrategy = FiringStrategyFactory.GetStrategy(tankData.firing_strategy);
+        movementStrategy = MovementStrategyFactory.GetStrategy(
+            tankData.movement_strategy, gameObject, inputSource, cameraPivot, aiTarget);
+        firingHandler = HandleFiringFactory.GetHandler(tankData.movement_strategy);
+    }
     public void SetAITarget(Transform target)
     {
         aiTarget = target;
-
-        if (tankData.movement_strategy == TankControllers.AI)
+    }
+    public void SetTankVisual(GameObject newVisual)
+    {
+        if (newVisual == null)
         {
-            var agent = GetComponent<NavMeshAgent>();
-            movementStrategy = new AIMovementStrategy(agent, aiTarget);
+            Debug.LogWarning("New tank visual is null. Cannot set visual.");
+            return;
         }
+
+        // Destroy old visual with "_Tank" in the name
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("_Tank"))
+            {
+                Destroy(child.gameObject);
+                break;
+            }
+        }
+
+        // Instantiate new visual as a child and reset local transform
+        GameObject visualInstance = Instantiate(newVisual, transform);
+        visualInstance.name = newVisual.name;
+
+        // Reset local transform to match prefab root
+        visualInstance.transform.localPosition = Vector3.zero;
+        visualInstance.transform.localRotation = Quaternion.identity;
+        visualInstance.transform.localScale = Vector3.one;
+
+        // Set new FirePoint
+        Transform newFirePoint = visualInstance.transform.Find("FiringPoint");
+        if (newFirePoint != null)
+        {
+            SetFirePoint(newFirePoint);
+        }
+        else
+        {
+            Debug.LogWarning("FirePoint not found in the new tank visual.");
+        }
+    }
+    public void SetFirePoint(Transform newFirePoint)
+    {
+        firePoint = newFirePoint;
     }
 }
 public struct TankDamageEvent
