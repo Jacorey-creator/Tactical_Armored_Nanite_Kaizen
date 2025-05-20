@@ -4,6 +4,7 @@ using UnityEngine;
 public class ProjectileData : ScriptableObject
 {
     [Header("Basic Settings")]
+    public GameObject owner;
     public float velocity = 20f;
     public float damage = 10f;
     public float lifetime = 5f;

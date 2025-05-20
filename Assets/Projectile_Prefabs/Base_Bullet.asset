@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Base_Bullet
   m_EditorClassIdentifier: 
   velocity: 25
-  damage: 12
+  damage: 4
   lifetime: 4
   explodes: 0
   explosionRadius: 5

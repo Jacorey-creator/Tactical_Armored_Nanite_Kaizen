@@ -3,36 +3,48 @@ using UnityEngine;
 public class PlayerMovementStrategy : ITankMovementStrategy
 {
     private ITankInput input;
-    private Transform cameraPivot;
-    private float rotationSpeed = 5f;
+    private float rotationSpeed = 50f;
     private float moveDeadZone = 0.1f;
 
-    public PlayerMovementStrategy(ITankInput input, Transform cameraPivot)
+    public PlayerMovementStrategy(ITankInput input)
     {
         this.input = input;
-        this.cameraPivot = cameraPivot;
     }
 
     public void Move(TankController tank)
     {
+        // Get input and check for deadzone
         Vector2 inputDir = input.MoveInput;
-
-        if (inputDir.sqrMagnitude < moveDeadZone * moveDeadZone)
-            return;
+        if (inputDir.sqrMagnitude < moveDeadZone * moveDeadZone) return;
 
         float vertical = inputDir.y;
         float horizontal = inputDir.x;
 
-        // Use the camera's forward to set the world-relative "forward" direction
-        Vector3 camForward = Vector3.ProjectOnPlane(cameraPivot.forward, Vector3.up).normalized;
-        float tankForwardAngle = Mathf.Atan2(camForward.x, camForward.z) * Mathf.Rad2Deg;
+        // Handle rotation separately from movement
+        if (Mathf.Abs(horizontal) > 0.1f)
+        {
+            // Rotate the tank based on horizontal input with proper Time.deltaTime
+            tank.transform.Rotate(0f, horizontal * rotationSpeed * Time.deltaTime, 0f);
+        }
 
-        // Rotate the tank based on horizontal input (like tank treads turning)
-        tank.transform.Rotate(0f, horizontal * rotationSpeed, 0f);
+        // Only apply forward/backward movement if we have vertical input
+        if (Mathf.Abs(vertical) > 0.1f)
+        {
+            // Move the tank forward or backward along its current forward direction
+            Vector3 moveDir = tank.transform.forward * vertical;
 
-        // Move the tank forward or backward along its current forward
-        Vector3 moveDir = tank.transform.forward * vertical;
-
-        tank.transform.position += moveDir * tank.TankData.speed * Time.deltaTime;
+            // Apply movement using physics if available, otherwise transform
+            Rigidbody tankRb = tank.GetComponent<Rigidbody>();
+            if (tankRb != null)
+            {
+                // Use physics-based movement (recommended)
+                tankRb.MovePosition(tank.transform.position + moveDir * tank.TankData.speed * Time.deltaTime);
+            }
+            else
+            {
+                // Fallback to transform-based movement
+                tank.transform.position += moveDir * tank.TankData.speed * Time.deltaTime;
+            }
+        }
     }
 }

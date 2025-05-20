@@ -7,15 +7,14 @@ public static class MovementStrategyFactory
          TankControllers type,
          GameObject tankObject,
          MonoBehaviour inputSource = null,
-         Transform cameraPivot = null,
          Transform aiTarget = null)
     {
         switch (type)
         {
             case TankControllers.Player:
-                if (inputSource is ITankInput playerInput && cameraPivot != null)
+                if (inputSource is ITankInput playerInput)
                 {
-                    return new PlayerMovementStrategy(playerInput, cameraPivot);
+                    return new PlayerMovementStrategy(playerInput);
                 }
                 Debug.LogWarning("Missing input or camera pivot for PlayerInput strategy.");
                 return null;

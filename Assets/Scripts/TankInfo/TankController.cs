@@ -13,7 +13,6 @@ public class TankController : MonoBehaviour
 
 
     public MonoBehaviour inputSource; // Assigned in Inspector
-    [SerializeField] private Transform cameraPivot;     // Set via Inspector if player
     [SerializeField] private Transform aiTarget;
     [SerializeField] private Transform firePoint;
     public Transform GetAITarget() => aiTarget;
@@ -22,6 +21,16 @@ public class TankController : MonoBehaviour
     public Transform FirePoint => firePoint;
 
     private void Awake()
+    {
+        InitializeTank();
+    }
+
+    private void Update()
+    {
+        movementStrategy?.Move(this);
+        firingHandler?.HandleFiring(this);
+    }
+    private void InitializeTank() 
     {
         // Initialize tank properties from the Scriptable Object data
         currentHealth = tankData.health;
@@ -32,7 +41,6 @@ public class TankController : MonoBehaviour
         tankData.movement_strategy,
         gameObject,
         inputSource,
-        cameraPivot,
         aiTarget
         );
 
@@ -40,11 +48,6 @@ public class TankController : MonoBehaviour
         SetTankVisual(tankData.tank_prefab);
     }
 
-    private void Update()
-    {
-        movementStrategy?.Move(this);
-        firingHandler?.HandleFiring(this);
-    }
     public void SetMovementStrategy(ITankMovementStrategy strategy)
     {
         movementStrategy = strategy;
@@ -61,7 +64,7 @@ public class TankController : MonoBehaviour
 
         firingStrategy = FiringStrategyFactory.GetStrategy(tankData.firing_strategy);
         movementStrategy = MovementStrategyFactory.GetStrategy(
-            tankData.movement_strategy, gameObject, inputSource, cameraPivot, aiTarget);
+            tankData.movement_strategy, gameObject, inputSource, aiTarget);
         firingHandler = HandleFiringFactory.GetHandler(tankData.movement_strategy);
     }
     public void SetAITarget(Transform target)
@@ -70,46 +73,10 @@ public class TankController : MonoBehaviour
     }
     public void SetTankVisual(GameObject newVisual)
     {
-        if (newVisual == null)
-        {
-            Debug.LogWarning("New tank visual is null. Cannot set visual.");
-            return;
-        }
-
-        // Destroy old visual with "_Tank" in the name
-        foreach (Transform child in transform)
-        {
-            if (child.name.Contains("_Tank"))
-            {
-                Destroy(child.gameObject);
-                break;
-            }
-        }
-
-        // Instantiate new visual as a child and reset local transform
-        GameObject visualInstance = Instantiate(newVisual, transform);
-        visualInstance.name = newVisual.name;
-
-        // Reset local transform to match prefab root
-        visualInstance.transform.localPosition = Vector3.zero;
-        visualInstance.transform.localRotation = Quaternion.identity;
-        visualInstance.transform.localScale = Vector3.one;
-
-        // Set new FirePoint
-        Transform newFirePoint = visualInstance.transform.Find("FiringPoint");
-        if (newFirePoint != null)
-        {
-            SetFirePoint(newFirePoint);
-        }
-        else
-        {
-            Debug.LogWarning("FirePoint not found in the new tank visual.");
-        }
+        TankVisualManager.SetTankVisual(gameObject, newVisual, out Transform updatedFirePoint);
+        if (updatedFirePoint != null) firePoint = updatedFirePoint;
     }
-    public void SetFirePoint(Transform newFirePoint)
-    {
-        firePoint = newFirePoint;
-    }
+
 }
 public struct TankDamageEvent
 {

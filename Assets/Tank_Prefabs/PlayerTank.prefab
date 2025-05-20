@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 50298155503540608}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.011, y: 1.408, z: -0.045}
+  m_LocalPosition: {x: 1.67, y: 0.84, z: -0.045}
   m_LocalScale: {x: 0.99999976, y: 1, z: 0.99999976}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -116,6 +116,7 @@ MonoBehaviour:
   level5TankData: {fileID: 11400000, guid: 10f05588c87ed3b479b304bf518c4d93, type: 2}
   level10TankData: {fileID: 0}
   level20TankData: {fileID: 0}
+  maxLevel: 20
 --- !u!136 &7294637758392774512
 CapsuleCollider:
   m_ObjectHideFlags: 0

@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e3975ed311ce4d489b4e6aae0b8b645, type: 3}
   m_Name: Exploding_Barrel
   m_EditorClassIdentifier: 
+  owner: {fileID: 0}
   velocity: 20
-  damage: 10
+  damage: 5
   lifetime: 0.5
   explodes: 1
   explosionRadius: 15

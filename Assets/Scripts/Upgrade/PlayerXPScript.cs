@@ -6,10 +6,11 @@ public class PlayerXPScript : MonoBehaviour
     [SerializeField] private TankData level5TankData;
     [SerializeField] private TankData level10TankData;
     [SerializeField] private TankData level20TankData;
+    [SerializeField] private int maxLevel = 20;
 
     private float xp;
     private int level = 1;
-    private float xpRate = 1f;
+    private float xpRate = 0.5f;
     private UpgradeTank upgradeSystem;
 
     private void Start()
@@ -56,6 +57,13 @@ public class PlayerXPScript : MonoBehaviour
                 case 20:
                     upgradeSystem.ApplyUpgrade(level20TankData);
                     break;
+            }
+
+            if (level >= maxLevel)
+            {
+                xp = maxLevel;
+                Debug.Log("Max level reached! Disabling XP script.");
+                enabled = false; // Disables this script entirely
             }
         }
     }
