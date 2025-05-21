@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerMovementStrategy : ITankMovementStrategy
 {
     private ITankInput input;
-    private float rotationSpeed = 50f;
+    private float rotationSpeed = 75.20f;
     private float moveDeadZone = 0.1f;
 
     public PlayerMovementStrategy(ITankInput input)

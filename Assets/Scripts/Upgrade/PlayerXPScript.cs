@@ -44,7 +44,6 @@ public class PlayerXPScript : MonoBehaviour
         if (newLevel > level)
         {
             level = newLevel;
-            Debug.Log($"Player leveled up to {level}");
 
             switch (level)
             {
@@ -62,7 +61,6 @@ public class PlayerXPScript : MonoBehaviour
             if (level >= maxLevel)
             {
                 xp = maxLevel;
-                Debug.Log("Max level reached! Disabling XP script.");
                 enabled = false; // Disables this script entirely
             }
         }

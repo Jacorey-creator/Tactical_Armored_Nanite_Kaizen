@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Transform spawnPoint;
 
+    [SerializeField] private ProceduralWorldGenerator worldGenerator;
+
     public void EndGame() { }
 
     public void TogglePause() { }
@@ -36,7 +38,15 @@ public class GameManager : MonoBehaviour
     public void SpawnPlayer()
     {
         GameObject tankObj = Instantiate(tankPrefab, spawnPoint.position, spawnPoint.rotation);
+        
+        //Register Player
         RegisterPlayer(1);
+
+        // Notify ProceduralWorldGenerator
+        if (worldGenerator != null)
+        {
+            worldGenerator.SetPlayer(tankObj.transform);
+        }
     }
     void RegisterPlayer(int playerID)
     {
