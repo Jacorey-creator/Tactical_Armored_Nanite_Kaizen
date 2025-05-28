@@ -508,16 +508,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce0b0121513da824ebf42e8b5a128805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  config:
+    renderDistance: 3
+    chunkSize: 20
+    heightScale: 1.5
+    noiseScale: 0.3
+    worldSeed: 0
+    navMeshUpdateInterval: 1
+    initialPlayerPosition: {x: 0, y: 0, z: 0}
   playerTransform: {fileID: 0}
   playerPrefab: {fileID: 2319399737314389665, guid: 47353fb8471069a48bb18dc5c0bfa9e5, type: 3}
-  initialPlayerPosition: {x: 0, y: 0, z: 0}
-  renderDistance: 3
-  chunkSize: 20
-  heightScale: 1.5
-  noiseScale: 0.25
-  worldSeed: 0
   navMeshSurface: {fileID: 0}
-  navMeshUpdateInterval: 1
 --- !u!114 &393283751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,8 +531,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71af3723b6c90ea499ea5762cc58c6fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldGenerator: {fileID: 0}
-  navMeshManager: {fileID: 0}
+  worldGenerator: {fileID: 393283750}
+  navMeshManager: {fileID: 393283749}
   initialGenerationDelay: 0.5
   centerFirstChunkOnPlayer: 1
 --- !u!1 &410087039
@@ -1001,7 +1002,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tankPrefab: {fileID: 2319399737314389665, guid: 47353fb8471069a48bb18dc5c0bfa9e5, type: 3}
   spawnPoint: {fileID: 1890807891}
-  worldGenerator: {fileID: 393283750}
+  worldGeneratorIntegrator: {fileID: 393283751}
 --- !u!114 &1890807893
 MonoBehaviour:
   m_ObjectHideFlags: 0

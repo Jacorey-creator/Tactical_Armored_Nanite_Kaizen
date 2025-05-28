@@ -7,14 +7,15 @@ public class TankController : MonoBehaviour
     public float currentHealth;
     public float currentShield;
     private float lastFireTime;
+
     private IFiringStrategy firingStrategy;
     private ITankMovementStrategy movementStrategy;
     private IHandleFiring firingHandler;
 
-
     public MonoBehaviour inputSource; // Assigned in Inspector
     [SerializeField] private Transform aiTarget;
     [SerializeField] private Transform firePoint;
+
     public Transform GetAITarget() => aiTarget;
     public IFiringStrategy GetFiringStrategy() => firingStrategy;
     public TankData TankData => tankData;
@@ -22,7 +23,7 @@ public class TankController : MonoBehaviour
 
     private void Awake()
     {
-        InitializeTank();
+        TankAssembler.ConfigureTank(this,tankData);
     }
 
     private void Update()
@@ -30,54 +31,36 @@ public class TankController : MonoBehaviour
         movementStrategy?.Move(this);
         firingHandler?.HandleFiring(this);
     }
-    private void InitializeTank() 
-    {
-        // Initialize tank properties from the Scriptable Object data
-        currentHealth = tankData.health;
-        currentShield = tankData.armor;
-        firingStrategy = FiringStrategyFactory.GetStrategy(tankData.firing_strategy);
 
-        movementStrategy = MovementStrategyFactory.GetStrategy(
-        tankData.movement_strategy,
-        gameObject,
-        inputSource,
-        aiTarget
-        );
-
-        firingHandler = HandleFiringFactory.GetHandler(tankData.movement_strategy);
-        SetTankVisual(tankData.tank_prefab);
-    }
-
-    public void SetMovementStrategy(ITankMovementStrategy strategy)
-    {
-        movementStrategy = strategy;
-    }
-    public void SetFiringStrategy(IFiringStrategy strategy)
-    {
-        firingStrategy = strategy;
-    }
-    public void SetTankData(TankData newData)
+    public void SetTankData(
+        TankData newData,
+        ITankMovementStrategy movement,
+        IFiringStrategy firing,
+        IHandleFiring handler)
     {
         tankData = newData;
         currentHealth = tankData.health;
         currentShield = tankData.armor;
 
-        firingStrategy = FiringStrategyFactory.GetStrategy(tankData.firing_strategy);
-        movementStrategy = MovementStrategyFactory.GetStrategy(
-            tankData.movement_strategy, gameObject, inputSource, aiTarget);
-        firingHandler = HandleFiringFactory.GetHandler(tankData.movement_strategy);
+        movementStrategy = movement;
+        firingStrategy = firing;
+        firingHandler = handler;
     }
-    public void SetAITarget(Transform target)
-    {
-        aiTarget = target;
-    }
+
+    public void SetMovementStrategy(ITankMovementStrategy strategy) => movementStrategy = strategy;
+    public void SetFiringStrategy(IFiringStrategy strategy) => firingStrategy = strategy;
+    public void SetFiringHandler(IHandleFiring handler) => firingHandler = handler;
+
+    public void SetAITarget(Transform target) => aiTarget = target;
+
     public void SetTankVisual(GameObject newVisual)
     {
         TankVisualManager.SetTankVisual(gameObject, newVisual, out Transform updatedFirePoint);
-        if (updatedFirePoint != null) firePoint = updatedFirePoint;
+        if (updatedFirePoint != null)
+            firePoint = updatedFirePoint;
     }
-
 }
+
 public struct TankDamageEvent
 {
     public TankController tank;

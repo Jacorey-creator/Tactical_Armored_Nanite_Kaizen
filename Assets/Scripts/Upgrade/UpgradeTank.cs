@@ -30,8 +30,7 @@ public class UpgradeTank
             }
 
             // Apply the new visual and data
-            tankController.SetTankVisual(newTankData.tank_prefab);
-            tankController.SetTankData(newTankData);
+            TankAssembler.ConfigureTank(tankController, newTankData);
             Debug.Log("Upgrade applied successfully!");
         }
         catch (Exception ex)

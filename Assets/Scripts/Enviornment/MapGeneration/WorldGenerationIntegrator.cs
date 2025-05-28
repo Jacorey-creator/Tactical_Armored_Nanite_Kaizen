@@ -15,6 +15,8 @@ public class WorldGenerationIntegrator : MonoBehaviour
     [SerializeField] private float initialGenerationDelay = 0.5f;
     [SerializeField] private bool centerFirstChunkOnPlayer = true;
 
+    public ProceduralWorldGenerator WorldGenerator => worldGenerator;
+
     private void Awake()
     {
         // Find components if not assigned
@@ -69,13 +71,6 @@ public class WorldGenerationIntegrator : MonoBehaviour
         {
             Debug.Log("WorldGenerationIntegrator: Found player, initializing world generation");
 
-            if (centerFirstChunkOnPlayer && worldGenerator != null)
-            {
-                // Offset the world generation so a chunk center is at the player's position
-                // This makes the initial chunk more centered on the player spawn point
-                AdjustGenerationToPlayerPosition(player.transform.position);
-            }
-
             // Set player as NavMesh tracking target
             if (navMeshManager != null)
             {
@@ -91,31 +86,26 @@ public class WorldGenerationIntegrator : MonoBehaviour
         }
     }
 
-    private void AdjustGenerationToPlayerPosition(Vector3 playerPosition)
+    // Called by GameManager when the game state changes
+    public void OnGameStateChanged(IGameState newState)
     {
-        // Logic to adjust world generation based on player position
-        // This could adjust noise offsets or generation boundaries
-        // to make the environment look better around the spawn point
-
-        // Example: You might want to ensure the player spawns in a flat area
-        // or in the center of a chunk rather than near a chunk boundary
-    }
-
-    // Called when the game state changes
-    public void OnGameStateChanged(GameManager.GameState newState)
-    {
-        if (newState == GameManager.GameState.Playing)
+        if (newState is PlayingState)
         {
-            // Game started or resumed - ensure world generation is active
+            // Enable systems when game starts or resumes
             if (worldGenerator != null)
-            {
                 worldGenerator.enabled = true;
-            }
 
             if (navMeshManager != null)
-            {
                 navMeshManager.enabled = true;
-            }
+        }
+        else if (newState is PausedState or MainMenuState or GameOverState)
+        {
+            // Disable systems when game is paused, over, or in main menu
+            if (worldGenerator != null)
+                worldGenerator.enabled = false;
+
+            if (navMeshManager != null)
+                navMeshManager.enabled = false;
         }
     }
 

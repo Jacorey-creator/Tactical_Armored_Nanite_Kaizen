@@ -296,6 +296,9 @@ public class WaveSpawner : MonoBehaviour
                 entity.transform.position = spawnPosition;
                 entity.transform.rotation = spawnRotation;
 
+                TankController controller = entity.GetComponent<TankController>();
+                TankAssembler.ConfigureTank(controller,controller.TankData);
+
                 // Add to active entities list for tracking
                 activeEntities.Add(entity);
 

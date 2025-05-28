@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Unity.AI.Navigation;
-
+using static UnityEditor.Experimental.GraphView.GraphView;
+using Assets.Scripts.Enviornment.MapGeneration;
+using Assets.Scripts.Player;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,32 +12,50 @@ using UnityEditor;
 
 public class ProceduralWorldGenerator : MonoBehaviour
 {
+    [Header("Configuration")]
+    [SerializeField] private WorldGenerationConfig config = new WorldGenerationConfig();
+
     [Header("Player Settings")]
     [SerializeField] private Transform playerTransform;
     [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private Vector3 initialPlayerPosition = new Vector3(0, 0, 0);
-
-    [Header("World Generation")]
-    [SerializeField] private int renderDistance = 3;
-    [SerializeField] private int chunkSize = 20;
-    [SerializeField] private float heightScale = 1.5f;
-    [SerializeField] private float noiseScale = 0.3f;
-    [SerializeField] private float worldSeed = 0f;
 
     [Header("NavMesh Settings")]
     [SerializeField] private NavMeshSurface navMeshSurface;
-    [SerializeField] private float navMeshUpdateInterval = 1.0f;
 
-    // Dictionary to track chunks by their grid position
-    private Dictionary<Vector2Int, GameObject> activeChunks = new Dictionary<Vector2Int, GameObject>();
-    private Vector2Int currentPlayerChunk = new Vector2Int(0, 0);
-    private float navMeshUpdateTimer = 0f;
-    private bool chunksInitialized = false;
+    // Dependencies (could be injected)
+    private IPlayer player;
+    private IChunkManager chunkManager;
+    private ITerrainGenerator terrainGenerator;
+    private IChunkLoadingStrategy loadingStrategy;
+    private WorldGenerationEvents events;
 
+    // State
+    private Vector2Int currentPlayerChunk;
+    private float navMeshUpdateTimer;
+    private bool isInitialized;
 
     private void Awake()
     {
-        // Ensure we have a NavMeshSurface component
+        InitializeDependencies();
+        InitializeNavMesh();
+        InitializeSeed();
+    }
+
+    private void InitializeDependencies()
+    {
+        // Initialize dependencies (in real project, could use DI container)
+        chunkManager = new ChunkManager();
+        terrainGenerator = new TerrainChunkGenerator();
+        loadingStrategy = new CircularChunkLoadingStrategy();
+        events = new WorldGenerationEvents();
+
+        // Subscribe to events
+        events.OnChunkCreated += OnChunkCreated;
+        events.OnChunkDestroyed += OnChunkDestroyed;
+    }
+
+    private void InitializeNavMesh()
+    {
         if (navMeshSurface == null)
         {
             navMeshSurface = GetComponent<NavMeshSurface>();
@@ -44,100 +64,115 @@ public class ProceduralWorldGenerator : MonoBehaviour
                 navMeshSurface = gameObject.AddComponent<NavMeshSurface>();
             }
         }
-
-        // Set a random seed if not specified
-        if (worldSeed == 0f)
-        {
-            worldSeed = Random.Range(0f, 10000f);
-        }
-        
         navMeshSurface.collectObjects = CollectObjects.All;
-        Random.InitState((int)worldSeed);
+    }
+
+    private void InitializeSeed()
+    {
+        if (config.worldSeed == 0f)
+        {
+            config.worldSeed = UnityEngine.Random.Range(0f, 10000f);
+        }
+        UnityEngine.Random.InitState((int)config.worldSeed);
     }
 
     private void Start()
     {
-        // If no player transform is assigned, try to find one
+        InitializePlayer();
+        if (player != null && player.IsValid)
+        {
+            InitializeWorld();
+        }
+    }
+
+    private void InitializePlayer()
+    {
         if (playerTransform == null)
         {
-            playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+            {
+                playerTransform = playerObject.transform;
+            }
         }
 
-        // Generate initial chunks around player
-        UpdatePlayerChunkPosition();
+        if (playerTransform != null)
+        {
+            player = new UnityPlayer(playerTransform);
+            player.OnPositionChanged += OnPlayerPositionChanged;
+        }
+    }
+
+    private void InitializeWorld()
+    {
+        currentPlayerChunk = GetChunkPosition(player.Position);
         GenerateChunksAroundPlayer();
+        isInitialized = true;
     }
 
     private void Update()
     {
-        if (playerTransform == null) return;
+        if (!isInitialized || player == null || !player.IsValid)
+            return;
 
-        // Check if player has moved to a new chunk
-        Vector2Int newPlayerChunk = GetChunkPosition(playerTransform.position);
-        if (newPlayerChunk != currentPlayerChunk)
+        // Update player (for position change detection)
+        if (player is UnityPlayer unityPlayer)
         {
-            currentPlayerChunk = newPlayerChunk;
-            GenerateChunksAroundPlayer();
+            unityPlayer.Update();
         }
 
         // Update NavMesh periodically
+        UpdateNavMeshTimer();
+    }
+
+    private void UpdateNavMeshTimer()
+    {
         navMeshUpdateTimer += Time.deltaTime;
-        if (navMeshUpdateTimer >= navMeshUpdateInterval)
+        if (navMeshUpdateTimer >= config.navMeshUpdateInterval)
         {
             navMeshUpdateTimer = 0f;
             UpdateNavMesh();
         }
     }
 
-    private void UpdatePlayerChunkPosition()
+    private void OnPlayerPositionChanged(Vector3 newPosition)
     {
-        if (playerTransform != null)
+        Vector2Int newPlayerChunk = GetChunkPosition(newPosition);
+        if (newPlayerChunk != currentPlayerChunk)
         {
-            currentPlayerChunk = GetChunkPosition(playerTransform.position);
+            currentPlayerChunk = newPlayerChunk;
+            GenerateChunksAroundPlayer();
         }
     }
 
     private Vector2Int GetChunkPosition(Vector3 worldPosition)
     {
         return new Vector2Int(
-            Mathf.FloorToInt(worldPosition.x / chunkSize),
-            Mathf.FloorToInt(worldPosition.z / chunkSize)
+            Mathf.FloorToInt(worldPosition.x / config.chunkSize),
+            Mathf.FloorToInt(worldPosition.z / config.chunkSize)
         );
     }
 
     private void GenerateChunksAroundPlayer()
     {
-        // Track which chunks should remain active
-        HashSet<Vector2Int> chunksToKeep = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> chunksToKeep = loadingStrategy.GetChunksToLoad(currentPlayerChunk, config.renderDistance);
 
-        // Generate chunks in render distance radius around player
-        for (int x = -renderDistance; x <= renderDistance; x++)
+        // Create new chunks
+        foreach (Vector2Int chunkPos in chunksToKeep)
         {
-            for (int z = -renderDistance; z <= renderDistance; z++)
+            if (!chunkManager.HasChunk(chunkPos))
             {
-                Vector2Int chunkPos = new Vector2Int(currentPlayerChunk.x + x, currentPlayerChunk.y + z);
-
-                // Only generate if within our render distance circle
-                if (Vector2Int.Distance(currentPlayerChunk, chunkPos) <= renderDistance)
-                {
-                    chunksToKeep.Add(chunkPos);
-
-                    // Create chunk if it doesn't exist
-                    if (!activeChunks.ContainsKey(chunkPos))
-                    {
-                        CreateChunk(chunkPos);
-                    }
-                }
+                CreateChunk(chunkPos);
             }
         }
 
-        // Remove chunks outside render distance
+        // Remove old chunks
         List<Vector2Int> chunksToRemove = new List<Vector2Int>();
-        foreach (KeyValuePair<Vector2Int, GameObject> chunk in activeChunks)
+        foreach (Vector2Int activeChunk in chunkManager.GetActiveChunkPositions())
         {
-            if (!chunksToKeep.Contains(chunk.Key))
+            if (!chunksToKeep.Contains(activeChunk))
             {
-                chunksToRemove.Add(chunk.Key);
+                chunksToRemove.Add(activeChunk);
             }
         }
 
@@ -146,44 +181,18 @@ public class ProceduralWorldGenerator : MonoBehaviour
             DestroyChunk(chunkPos);
         }
     }
-    private void CreateChunk(Vector2Int chunkPos)
+
+    private void CreateChunk(Vector2Int chunkPosition)
     {
-        // Create a new chunk GameObject
-        GameObject chunkObject = new GameObject($"Chunk_{chunkPos.x}_{chunkPos.y}");
-        chunkObject.transform.position = new Vector3(chunkPos.x * chunkSize, 0, chunkPos.y * chunkSize);
-        chunkObject.transform.parent = transform;
-
-        // Add necessary components
-        TerrainMeshGenerator terrainGenerator = chunkObject.AddComponent<TerrainMeshGenerator>();
-        MeshCollider meshCollider = chunkObject.AddComponent<MeshCollider>();
-
-        // Set noise offset for this chunk to create continuous terrain
-        float xOffset = chunkPos.x * chunkSize;
-        float zOffset = chunkPos.y * chunkSize;
-        terrainGenerator.SetNoiseOffset(xOffset, zOffset);
-
-        // Configure terrain generator
-        terrainGenerator.UpdateTerrainParameters(
-            chunkSize,
-            chunkSize,
-            heightScale,
-            noiseScale
-        );
-
-        // Apply the terrain mesh to the collider
-        meshCollider.sharedMesh = terrainGenerator.GetMesh();
-
-        // Add to active chunks
-        activeChunks.Add(chunkPos, chunkObject);
+        GameObject chunk = terrainGenerator.GenerateChunk(chunkPosition, config, transform);
+        chunkManager.AddChunk(chunkPosition, chunk);
+        events.NotifyChunkCreated(chunkPosition, chunk);
     }
 
-    private void DestroyChunk(Vector2Int chunkPos)
+    private void DestroyChunk(Vector2Int chunkPosition)
     {
-        if (activeChunks.TryGetValue(chunkPos, out GameObject chunk))
-        {
-            Destroy(chunk);
-            activeChunks.Remove(chunkPos);
-        }
+        chunkManager.RemoveChunk(chunkPosition);
+        events.NotifyChunkDestroyed(chunkPosition);
     }
 
     private void UpdateNavMesh()
@@ -191,28 +200,56 @@ public class ProceduralWorldGenerator : MonoBehaviour
         if (navMeshSurface != null)
         {
             navMeshSurface.BuildNavMesh();
+            events.NotifyNavMeshUpdated();
         }
-    }
-    public void SetPlayer(Transform player)
-    {
-        playerTransform = player;
-        InitializeChunks();
-    }
-    private void InitializeChunks()
-    {
-        UpdatePlayerChunkPosition();
-        GenerateChunksAroundPlayer();
-        chunksInitialized = true;
     }
 
-    // Editor utility class for setting static flags
-    private static class GameObjectUtility
+    // Event handlers
+    private void OnChunkCreated(Vector2Int position, GameObject chunk)
     {
-        public static void SetStaticEditorFlags(GameObject gameObject, StaticEditorFlags flags)
+        Debug.Log($"Chunk created at {position}");
+    }
+
+    private void OnChunkDestroyed(Vector2Int position)
+    {
+        Debug.Log($"Chunk destroyed at {position}");
+    }
+
+    // Public API
+    public void SetPlayer(Transform newPlayerTransform)
+    {
+        playerTransform = newPlayerTransform;
+        InitializePlayer();
+        if (player != null && player.IsValid)
         {
-#if UNITY_EDITOR
-            UnityEditor.GameObjectUtility.SetStaticEditorFlags(gameObject, flags);
-#endif
+            InitializeWorld();
         }
+    }
+
+    public WorldGenerationConfig GetConfig()
+    {
+        return config;
+    }
+
+    public WorldGenerationEvents GetEvents()
+    {
+        return events;
+    }
+
+    private void OnDestroy()
+    {
+        // Cleanup
+        if (events != null)
+        {
+            events.OnChunkCreated -= OnChunkCreated;
+            events.OnChunkDestroyed -= OnChunkDestroyed;
+        }
+
+        if (player != null)
+        {
+            player.OnPositionChanged -= OnPlayerPositionChanged;
+        }
+
+        chunkManager?.Clear();
     }
 }

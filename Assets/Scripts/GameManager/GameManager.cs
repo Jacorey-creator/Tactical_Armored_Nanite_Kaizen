@@ -1,20 +1,24 @@
 using UnityEngine;
 
+// Game States
+public interface IGameState
+{
+    void Enter(GameManager gameManager);
+    void Update(GameManager gameManager);
+    void Exit(GameManager gameManager);
+    void HandleInput(GameManager gameManager);
+}
+
+// Updated GameManager
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    public enum GameState { MainMenu, Playing, Paused, GameOver }
-    public GameState CurrentState { get; private set; }
+
+    public IGameState CurrentState { get; private set; }
 
     [SerializeField] private GameObject tankPrefab;
-
     [SerializeField] private Transform spawnPoint;
-
-    [SerializeField] private ProceduralWorldGenerator worldGenerator;
-
-    public void EndGame() { }
-
-    public void TogglePause() { }
+    [SerializeField] private WorldGenerationIntegrator worldGeneratorIntegrator;
 
     private void Awake()
     {
@@ -26,34 +30,85 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
+
     private void Start()
     {
-        StartGame();
+        // Start with Main Menu state
+        ChangeState(new PlayingState());
     }
+
+    private void Update()
+    {
+        CurrentState?.Update(this);
+        CurrentState?.HandleInput(this);
+    }
+
+    public void ChangeState(IGameState newState)
+    {
+        CurrentState?.Exit(this);
+        CurrentState = newState;
+        CurrentState?.Enter(this);
+
+        if (worldGeneratorIntegrator != null)
+        {
+            worldGeneratorIntegrator.OnGameStateChanged(newState);
+        }
+    }
+
+    // Public methods to change states (can be called from UI buttons, etc.)
     public void StartGame()
     {
-        CurrentState = GameState.Playing;
-        SpawnPlayer();
+        ChangeState(new PlayingState());
     }
+
+    public void EndGame()
+    {
+        ChangeState(new GameOverState());
+    }
+
+    public void TogglePause()
+    {
+        if (CurrentState is PlayingState)
+        {
+            ChangeState(new PausedState());
+        }
+        else if (CurrentState is PausedState)
+        {
+            ChangeState(new PlayingState());
+        }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        ChangeState(new MainMenuState());
+    }
+
     public void SpawnPlayer()
     {
         GameObject tankObj = Instantiate(tankPrefab, spawnPoint.position, spawnPoint.rotation);
-        
-        //Register Player
+
+        // Register Player
         RegisterPlayer(1);
 
         // Notify ProceduralWorldGenerator
-        if (worldGenerator != null)
+        if (worldGeneratorIntegrator.WorldGenerator != null)
         {
-            worldGenerator.SetPlayer(tankObj.transform);
+            worldGeneratorIntegrator.WorldGenerator.SetPlayer(tankObj.transform);
         }
     }
-    void RegisterPlayer(int playerID)
+
+    private void RegisterPlayer(int playerID)
     {
         ScoreManager.Instance.RegisterPlayer(playerID);
     }
+
     public PlayerScore GetPlayerScore(int playerID)
     {
         return ScoreManager.Instance.GetScore(playerID);
+    }
+
+    public bool IsInState<T>() where T : IGameState
+    {
+        return CurrentState is T;
     }
 }
