@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Game States
+// Game State Interface
 public interface IGameState
 {
     void Enter(GameManager gameManager);
@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         // Start with Main Menu state
-        ChangeState(new PlayingState());
+        ChangeState(new MainMenuState());
     }
 
     private void Update()
